@@ -5,6 +5,9 @@
 #include "stm32f1xx_hal.h"
 
 /*Helper Functions------------------------------------------------------------*/
+#define NOPULL  1000
+#define NOSPEED 1000
+
 void BSP_GPIO_Init(GPIO_TypeDef* Port, uint32_t Pin, uint32_t Mode, uint32_t Pull, uint32_t Speed);
 
 /* UART ----------------------------------------------------------------------*/

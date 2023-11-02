@@ -19,11 +19,15 @@
 extern "C" {
 #endif
 
-//@TODO check pin port mappings
-#define WIZ_CS_PIN                   GPIO_PIN_8
-#define WIZ_CS_GPIO_PORT             GPIOA
-#define WIZ_RST_PIN                  GPIO_PIN_9
-#define WIZ_RST_GPIO_PORT            GPIOA
+
+#define WIZ_CS_PIN                                GPIO_PIN_0
+#define WIZ_CS_GPIO_PORT                          GPIOB
+#define WIZ_CS_GPIO_CLK_ENABLE()                  __HAL_RCC_GPIOB_CLK_ENABLE()
+#define WIZ_RST_PIN                               GPIO_PIN_1
+#define WIZ_RST_GPIO_PORT                         GPIOB
+#define WIZ_RST_GPIO_CLK_ENABLE()                 __HAL_RCC_GPIOB_CLK_ENABLE()
+#define WIZ_INT_PIN                               GPIO_PIN_1 
+#define WIZ_INT_GPIO_PORT                         GPIOA
 
 void wiz_lowlevel_setup(void)
 {
@@ -35,6 +39,7 @@ void wiz_lowlevel_setup(void)
   gpioInit.GPIO_OType = GPIO_OType_PP;
   gpioInit.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(wiz_cs_gpio_port, &gpioInit);*/
+  WIZ_CS_GPIO_CLK_ENABLE(); 
   BSP_GPIO_Init(WIZ_CS_GPIO_PORT,WIZ_CS_PIN,GPIO_MODE_OUTPUT_PP,GPIO_NOPULL,GPIO_SPEED_FREQ_HIGH);
   HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_SET);
 
@@ -45,6 +50,7 @@ void wiz_lowlevel_setup(void)
   gpioInit.GPIO_OType = GPIO_OType_PP;
   gpioInit.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_Init(wiz_rst_gpio_port, &gpioInit);*/
+  WIZ_RST_GPIO_CLK_ENABLE(); 
   BSP_GPIO_Init(WIZ_RST_GPIO_PORT,WIZ_RST_PIN,GPIO_MODE_OUTPUT_PP,GPIO_PULLUP,GPIO_SPEED_FREQ_HIGH);
   HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_SET);
 
@@ -56,6 +62,10 @@ void wiz_lowlevel_setup(void)
   gpioInit.GPIO_OType = GPIO_OType_PP;
   gpioInit.GPIO_PuPd = GPIO_PuPd_UP;
   GPIO_Init(GPIOE, &gpioInit);*/
+  /* EXTI interrupt init*/
+  BSP_GPIO_Init(WIZ_INT_GPIO_PORT,WIZ_INT_PIN,GPIO_MODE_IT_RISING_FALLING,GPIO_NOPULL,NOSPEED);
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 }
 
 void wiz_transmit_pbuf(struct pbuf *p)

@@ -66,7 +66,7 @@ int main(void) {
 
 #ifdef USE_DHCP
     /* handle periodic timers for LwIP */
-    //DHCP_Periodic_Handle(&gnetif);
+    DHCP_Periodic_Handle(&gnetif);
 #endif 
   
   }
@@ -80,7 +80,7 @@ int main(void) {
   */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin == GPIO_PIN_14)
+  if (GPIO_Pin == GPIO_PIN_1)
   {
     //@Todo
   }

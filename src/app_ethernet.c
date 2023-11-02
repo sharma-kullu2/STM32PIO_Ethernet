@@ -21,7 +21,7 @@
 #include "lwip/dhcp.h"
 #include "app_ethernet.h"
 #ifdef USE_LCD
- // #include "lcd_log.h"
+  // #include "lcd_log.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/
