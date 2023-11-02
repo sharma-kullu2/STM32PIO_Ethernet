@@ -1,0 +1,13 @@
+{
+    "name": "stm32lwiplib",
+    "version": "0.0.1",
+    "build": {
+        "libArchive":false,
+        "flags":[
+            "-Isrc/include",
+            "-Isystem "
+        ],
+        "extraScript": "source_lib.py"
+            
+    }
+}
