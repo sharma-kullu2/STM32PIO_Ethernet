@@ -23,6 +23,30 @@ GPIO_TypeDef* LED_PORT[LEDn] = {LED2_GPIO_PORT};
 const uint16_t LED_PIN[LEDn] = {LED2_PIN};
 
 /**
+  * @brief  Helper Fn to enable GPIO | Enable Clock before enabling GPIO Port
+  * @param  Port: GPIO Port. 
+  *          This parameter can be one of the following values:
+  *     @arg GPIOA
+  * @param  Pin: GPIO Pin. 
+  *          This parameter can be one of the following values:
+  *     @arg LED2
+  * @param  Mode: Push PUll/ Open Drain etc 
+  * @param  Pull: Pull no/up/down mode.
+  * @param  Speed: Low,Medium,High Frequency.       
+  */
+void BSP_GPIO_Init(GPIO_TypeDef* Port, uint32_t Pin, uint32_t Mode, uint32_t Pull, uint32_t Speed)
+{
+  GPIO_InitTypeDef  gpioinitstruct;
+  /* Configure the GPIO_LED pin */
+  gpioinitstruct.Pin    = Pin;
+  gpioinitstruct.Mode   = Mode;
+  gpioinitstruct.Pull   = Pull;
+  gpioinitstruct.Speed  = Speed;
+  
+  HAL_GPIO_Init(Port, &gpioinitstruct);
+}
+
+/**
   * @brief  Configures LED GPIO.
   * @param  Led: Led to be configured. 
   *          This parameter can be one of the following values:
@@ -30,18 +54,19 @@ const uint16_t LED_PIN[LEDn] = {LED2_PIN};
   */
 void BSP_LED_Init(Led_TypeDef Led)
 {
-  GPIO_InitTypeDef  gpioinitstruct;
+  //GPIO_InitTypeDef  gpioinitstruct;
   
   /* Enable the GPIO_LED Clock */
   LEDx_GPIO_CLK_ENABLE(Led);
 
   /* Configure the GPIO_LED pin */
-  gpioinitstruct.Pin    = LED_PIN[Led];
+  BSP_GPIO_Init(LED_PORT[Led],LED_PIN[Led],GPIO_MODE_OUTPUT_PP,GPIO_NOPULL,GPIO_SPEED_FREQ_HIGH);
+  /*gpioinitstruct.Pin    = LED_PIN[Led];
   gpioinitstruct.Mode   = GPIO_MODE_OUTPUT_PP;
   gpioinitstruct.Pull   = GPIO_NOPULL;
   gpioinitstruct.Speed  = GPIO_SPEED_FREQ_HIGH;
   
-  HAL_GPIO_Init(LED_PORT[Led], &gpioinitstruct);
+  HAL_GPIO_Init(LED_PORT[Led], &gpioinitstruct);*/
 
   /* Reset PIN to switch off the LED */
   HAL_GPIO_WritePin(LED_PORT[Led],LED_PIN[Led], GPIO_PIN_RESET);

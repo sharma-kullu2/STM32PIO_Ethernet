@@ -4,6 +4,9 @@
 
 #include "stm32f1xx_hal.h"
 
+/*Helper Functions------------------------------------------------------------*/
+void BSP_GPIO_Init(GPIO_TypeDef* Port, uint32_t Pin, uint32_t Mode, uint32_t Pull, uint32_t Speed);
+
 /* UART ----------------------------------------------------------------------*/
 
 /* Definition for USARTx clock resources */
@@ -91,7 +94,7 @@ void            BSP_LED_Toggle(Led_TypeDef Led);
 void               BSP_SPI_Init(void);
 void               BSP_SPI_Write(uint8_t Value);
 void               BSP_SPI_WriteData(uint8_t *DataIn, uint16_t DataLength);
-void               BSP_SPI_WriteReadData(const uint8_t *DataIn, uint8_t *DataOut, uint16_t DataLegnth);
+void               BSP_SPI_WriteReadData(const uint8_t *DataIn, uint8_t *DataOut, uint16_t DataLength);
 
 
 #endif
