@@ -30,36 +30,46 @@ int main(void) {
   if(BSP_UART_Init()!=HAL_OK){
     Error_Handler();
   }
-  
+  BSP_LED_On(LED2);
+  HAL_Delay(10*1000);
   /* Output a message on Hyperterminal using printf function */
   printf("\n\r**********************************\n\r");
   printf("\n\r STM32 F103C8 W5500 SPIEthernet Device\n\r");
   printf("\n\r**********************************\n\r");
-  
+
+#if 0
   /*init lwip stack*/
   lwip_init();
   /* Configure the Network interface */
   Netif_Config();
-  
   /* tcp echo server Init */
   tcp_echoserver_init();
   
   /* Notify user about the network interface config */
   User_notification(&gnetif);
-
+#else
+  w5500_ini_2();
+#endif
   /* Infinite loop */
   while (1)
   {  
     /* Read a received packet from the Ethernet buffers and send it 
        to the lwIP for handling */
-    //ethernetif_input(&gnetif);
+    DEBUG("DEBUG : inside while\n");
+    //BSP_LED_Toggle(LED2);
+  #if 1
+    //getVersion();
     BSP_LED_Off(LED2);
     printf("LED OFF \n\r");
     HAL_Delay(500);
     BSP_LED_On(LED2);
     printf("LED ON \n\r");
     HAL_Delay(500);
+  #else
+
     spi_if_input(&gnetif);
+
+    spi_if_set_link_state(&gnetif);
 
     /* Handle timeouts */
     sys_check_timeouts();
@@ -68,7 +78,7 @@ int main(void) {
     /* handle periodic timers for LwIP */
     DHCP_Periodic_Handle(&gnetif);
 #endif 
-  
+  #endif
   }
   return 0;
 }
@@ -83,6 +93,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   if (GPIO_Pin == GPIO_PIN_1)
   {
     //@Todo
+    DEBUG("Got Interrupt!!!\n");
   }
 }
 
@@ -96,6 +107,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   */
 static void Netif_Config(void)
 {
+  ENTER();
   ip_addr_t ipaddr;
   ip_addr_t netmask;
   ip_addr_t gw;
@@ -105,8 +117,11 @@ static void Netif_Config(void)
   IP_ADDR4(&gw,GW_ADDR0,GW_ADDR1,GW_ADDR2,GW_ADDR3);
   
   /* Add the network interface */    
-  netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &spi_if_init, &ethernet_input);
-  
+  //netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &spi_if_init, &ethernet_input);
+  netif_add(&gnetif, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY, NULL, &spi_if_init, &netif_input);
+
+  DEBUG("---netif add\n");
+
   /* Registers the default network interface */
   netif_set_default(&gnetif);
   
@@ -124,6 +139,8 @@ static void Netif_Config(void)
   /* Set the link callback function, this function is called on change of link status */
   //@Todo
   //netif_set_link_callback(&gnetif, ethernetif_update_config);
+  netif_set_link_callback(&gnetif, spi_if_update_config);
+  EXIT();
 }
 
 /**
@@ -133,7 +150,8 @@ static void Netif_Config(void)
   */
 static void Error_Handler(void){
   while(1){
-    BSP_LED_On(LED2);
+    BSP_LED_Toggle(LED2);
+    HAL_Delay(100);
   }
 }
 /**

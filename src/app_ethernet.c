@@ -54,7 +54,7 @@ void User_notification(struct netif *netif)
     LCD_UsrLog ("Static IP address: %s\n", iptxt);
 #else    
     /* Turn On LED 1 to indicate ETH and LwIP init success*/
-    BSP_LED_On(LED1);
+    BSP_LED_On(LED2);
 #endif /* USE_LCD */
 #endif /* USE_DHCP */
  }
@@ -142,14 +142,17 @@ void ethernetif_notify_conn_changed(struct netif *netif)
   */
 void DHCP_Process(struct netif *netif)
 {
+  ENTER();
   ip_addr_t ipaddr;
   ip_addr_t netmask;
   ip_addr_t gw;
   struct dhcp *dhcp;   
-#ifdef USE_LCD 
+//#ifdef USE_LCD 
   uint8_t iptxt[20];
-#endif
+//#endif
   
+  DEBUG("DHCP_state: %d\n",DHCP_state);
+
   switch (DHCP_state)
   {
     case DHCP_START:
@@ -161,6 +164,8 @@ void DHCP_Process(struct netif *netif)
       dhcp_start(netif);
 #ifdef USE_LCD
       LCD_UsrLog ("  State: Looking for DHCP server ...\n");
+#else
+      DEBUG("  State: Looking for DHCP server ...\n");
 #endif
     }
     break;
@@ -175,7 +180,9 @@ void DHCP_Process(struct netif *netif)
         sprintf((char *)iptxt, "%s", ip4addr_ntoa((const ip4_addr_t *)&netif->ip_addr));
         LCD_UsrLog ("IP address assigned by a DHCP server: %s\n", iptxt); 
 #else
-        //BSP_LED_On(LED1);   
+        //BSP_LED_On(LED1);
+      sprintf((char *)iptxt, "%s", ip4addr_ntoa((const ip4_addr_t *)&netif->ip_addr));
+      DEBUG ("IP address assigned by a DHCP server: %s\n", iptxt);  
 #endif
       }
       else
@@ -202,6 +209,9 @@ void DHCP_Process(struct netif *netif)
           LCD_UsrLog ("Static IP address: %s\n", iptxt);   
 #else
           BSP_LED_On(LED2);  
+          sprintf((char *)iptxt, "%s", ip4addr_ntoa((const ip4_addr_t *)&netif->ip_addr));
+          DEBUG ("DHCP Timeout !! \n");
+          DEBUG ("Static IP address: %s\n", iptxt);
 #endif
         }
       }
@@ -216,6 +226,7 @@ void DHCP_Process(struct netif *netif)
     break;
   default: break;
   }
+  EXIT();
 }
 
 /**

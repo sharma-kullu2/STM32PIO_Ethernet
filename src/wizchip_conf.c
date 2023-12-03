@@ -183,8 +183,7 @@ _WIZCHIP  WIZCHIP =
             //wizchip_bus_writebyte
             wizchip_bus_readdata,
             wizchip_bus_writedata
-        },
-
+        }
     }
 };
 

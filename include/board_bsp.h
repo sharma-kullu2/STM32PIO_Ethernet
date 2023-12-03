@@ -95,10 +95,11 @@ void            BSP_LED_Toggle(Led_TypeDef Led);
 
 
 void               BSP_SPI_Init(void);
+uint32_t           BSP_SPI_Read(void);
 void               BSP_SPI_Write(uint8_t Value);
-void               BSP_SPI_WriteData(uint8_t *DataIn, uint16_t DataLength);
+void               BSP_SPI_ReadData(const uint8_t *Data, uint16_t DataLength);
+void               BSP_SPI_WriteData(const uint8_t *DataIn, uint16_t DataLength);
 void               BSP_SPI_WriteReadData(const uint8_t *DataIn, uint8_t *DataOut, uint16_t DataLength);
-
 
 #endif
 

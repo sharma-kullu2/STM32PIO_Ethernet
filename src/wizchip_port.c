@@ -20,56 +20,89 @@ extern "C" {
 #endif
 
 
-#define WIZ_CS_PIN                                GPIO_PIN_0
-#define WIZ_CS_GPIO_PORT                          GPIOB
-#define WIZ_CS_GPIO_CLK_ENABLE()                  __HAL_RCC_GPIOB_CLK_ENABLE()
+#define WIZ_CS_PIN                                GPIO_PIN_4
+#define WIZ_CS_GPIO_PORT                          GPIOA
+#define WIZ_CS_GPIO_CLK_ENABLE()                  __HAL_RCC_GPIOA_CLK_ENABLE()
 #define WIZ_RST_PIN                               GPIO_PIN_1
 #define WIZ_RST_GPIO_PORT                         GPIOB
 #define WIZ_RST_GPIO_CLK_ENABLE()                 __HAL_RCC_GPIOB_CLK_ENABLE()
 #define WIZ_INT_PIN                               GPIO_PIN_1 
 #define WIZ_INT_GPIO_PORT                         GPIOA
 
+/**
+  * @brief  SD Control Lines management
+  */  
+#define WIZ_CS_LOW()       HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_RESET);//GPIO_Off(SD_CS_GPIO_PORT, SD_CS_PIN)
+#define WIZ_CS_HIGH()      HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_SET);//GPIO_On(SD_CS_GPIO_PORT, SD_CS_PIN)
+
+
+
+uint8_t wizchip_spi_readbyte(void)        {
+  ENTER();
+  uint8_t rx=0;
+  BSP_SPI_ReadData( &rx, 1);
+  DEBUG("readbyte : 0x%X\n",rx);
+  EXIT();
+  return rx;
+}
+
+void  wizchip_spi_writebyte(uint8_t wb) {
+  ENTER();
+  DEBUG("writebyte : 0x%X\n",wb);
+  //BSP_SPI_Write((uint8_t)wb);
+  BSP_SPI_WriteData(&wb, 1);
+  EXIT();
+}
+
+void  wizchip_spi_readburst(uint8_t* pBuf, uint16_t len)  {
+  ENTER();
+  BSP_SPI_ReadData(pBuf, len);
+  EXIT();
+}
+
+void  wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {
+  ENTER();
+  BSP_SPI_WriteData(pBuf, len);
+  EXIT();
+}
+
+
+
 void wiz_lowlevel_setup(void)
 {
+  ENTER();
+  /* SD_CS_GPIO Periph clock enable */
+  GPIO_InitTypeDef  gpioinitstruct = {0};
+  WIZ_CS_GPIO_CLK_ENABLE();
+
+  /* Configure SD_CS_PIN pin: SD Card CS pin */
+  gpioinitstruct.Pin    = WIZ_CS_PIN;
+  gpioinitstruct.Mode   = GPIO_MODE_OUTPUT_PP;
+  gpioinitstruct.Pull   = GPIO_PULLUP;
+  gpioinitstruct.Speed  = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(WIZ_CS_GPIO_PORT, &gpioinitstruct);
+
   BSP_SPI_Init();
-  // CS Pin
-  /*gpioInit.GPIO_Pin = wiz_cs_pin;
-  gpioInit.GPIO_Mode = GPIO_Mode_OUT;
-  gpioInit.GPIO_Speed = GPIO_Speed_25MHz;
-  gpioInit.GPIO_OType = GPIO_OType_PP;
-  gpioInit.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(wiz_cs_gpio_port, &gpioInit);*/
-  WIZ_CS_GPIO_CLK_ENABLE(); 
-  BSP_GPIO_Init(WIZ_CS_GPIO_PORT,WIZ_CS_PIN,GPIO_MODE_OUTPUT_PP,GPIO_NOPULL,GPIO_SPEED_FREQ_HIGH);
-  HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_SET);
 
   // RST Pin
-  /*gpioInit.GPIO_Pin = wiz_rst_pin;
-  gpioInit.GPIO_Mode = GPIO_Mode_OUT;
-  gpioInit.GPIO_Speed = GPIO_Speed_50MHz;
-  gpioInit.GPIO_OType = GPIO_OType_PP;
-  gpioInit.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_Init(wiz_rst_gpio_port, &gpioInit);*/
-  WIZ_RST_GPIO_CLK_ENABLE(); 
-  BSP_GPIO_Init(WIZ_RST_GPIO_PORT,WIZ_RST_PIN,GPIO_MODE_OUTPUT_PP,GPIO_PULLUP,GPIO_SPEED_FREQ_HIGH);
-  HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_SET);
+  //WIZ_RST_GPIO_CLK_ENABLE(); 
+  //BSP_GPIO_Init(WIZ_RST_GPIO_PORT,WIZ_RST_PIN,GPIO_MODE_OUTPUT_PP,GPIO_PULLUP,GPIO_SPEED_FREQ_HIGH);
+  //HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_SET);
 
-  //@Todo
-  // INT Pin
-  /*gpioInit.GPIO_Pin = GPIO_Pin_6;
-  gpioInit.GPIO_Mode = GPIO_Mode_IN;
-  gpioInit.GPIO_Speed = GPIO_Speed_50MHz;
-  gpioInit.GPIO_OType = GPIO_OType_PP;
-  gpioInit.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_Init(GPIOE, &gpioInit);*/
   /* EXTI interrupt init*/
-  BSP_GPIO_Init(WIZ_INT_GPIO_PORT,WIZ_INT_PIN,GPIO_MODE_IT_RISING_FALLING,GPIO_NOPULL,NOSPEED);
+  /*BSP_GPIO_Init(WIZ_INT_GPIO_PORT,WIZ_INT_PIN,GPIO_MODE_IT_RISING_FALLING,GPIO_NOPULL,NOSPEED);
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);*/
+  //
+  
+  reg_wizchip_spi_cbfunc(&wizchip_spi_readbyte,&wizchip_spi_writebyte);
+  reg_wizchip_spiburst_cbfunc(&wizchip_spi_readburst,&wizchip_spi_writeburst);
+  EXIT();
 }
 
 void wiz_transmit_pbuf(struct pbuf *p)
 {
+  ENTER();
   uint16_t freeSize= getSn_TX_FSR(0);
   uint16_t length = p->tot_len;
 
@@ -83,26 +116,46 @@ void wiz_transmit_pbuf(struct pbuf *p)
     p = p->next;
   }
   setSn_CR(0, Sn_CR_SEND);
+  EXIT();
 }
 
 int wiz_read_receive_pbuf(struct pbuf **buf)
 {
-  uint8_t header[6];
-  uint16_t length, readlen;
+  ENTER();
+  //uint8_t header[6];
+  uint16_t readlen;
   uint16_t framelen;
-  struct pbuf * p;
+  //struct pbuf * p;
 
   if (*buf != NULL)
     return 1;
 
-  uint16_t rxRd= getSn_RX_RD(0);
+  while(1)
+  {
+    readlen = getSn_RX_RSR(0);
+    uint8_t sck = getSn_SR(0);
+    if (sck != SOCK_ESTABLISHED){
+            if(sck == SOCK_CLOSE_WAIT){
+               if(readlen != 0) break;
+               else if(getSn_TX_FSR(0) == getSn_TxMAX(0)){
+                  return 1;
+               }
+            }
+            else{
+               return 1;
+            }
+         }
+         //if((sock_io_mode & (1<<0)) && (recvsize == 0)) return SOCK_BUSY;
+         if(readlen != 0) break;
+  };
 
-  length= getSn_RX_RSR(0);
-  if (length < 4) {
+  DEBUG("%s : READLEN : %d\n",__func__ ,readlen);
+  //uint16_t rxRd= 
+  //getSn_RX_RD(0);
+  if (readlen < 4) {
     /* This could be indicative of a crashed (brown-outed?) controller */
     goto end;
   }
-
   wiz_recv_data(0, (uint8_t *)&framelen, 2);
   setSn_CR(0, Sn_CR_RECV);
   //__bswap16(framelen); //!< didn't work for me
@@ -125,63 +178,118 @@ int wiz_read_receive_pbuf(struct pbuf **buf)
 
   wiz_recv_data(0, (uint8_t*)(*buf)->payload, framelen);
   setSn_CR(0, Sn_CR_RECV);
-
+  EXIT();
 end:
   return (*buf == NULL) ? 2 : 0;
 }
 
 void    wizchip_cris_enter(void)           {
-
+//ENTER();
+//EXIT();
 }
 
 void    wizchip_cris_exit(void)          {
-
+//ENTER();
+//EXIT();
 }
 
 void  wizchip_cs_select(void)            {
-  HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_RESET);
+  //ENTER();
+  WIZ_CS_LOW(); 
+  //EXIT();
 }
 
 void  wizchip_cs_deselect(void)          {
-  HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_SET);
+  //ENTER();
+  WIZ_CS_HIGH();
+  //EXIT();
 }
 
 void  wizchip_rst_assert(void)            {
+  ENTER();
   HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_RESET);
+  EXIT();
 }
 
 void  wizchip_rst_deassert(void)          {
+  ENTER();
   HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_SET);
+  EXIT();
 }    
 
 
 void wiz_hwReset(void) {
+    ENTER();
     uint32_t t= 168000;
     wizchip_rst_assert();
     while(--t);
     wizchip_rst_deassert();
     t= 168000;
     while(--t);
+    EXIT();
+}
+
+//TEMP
+//===========================================================================//
+void w5500_ini(void){
+  ENTER();
+  uint8_t temp;
+  uint8_t W5500FifoSize[2][8] = {{2, 2, 2, 2, 2, 2, 2, 2, }, {2, 2, 2, 2, 2, 2, 2, 2}};
+
+  //wizchip_cs_deselect(); //Chip OFF
+  
+  wiz_lowlevel_setup();
+  uint8_t reg= getVERSIONR();
+  DEBUG("VERSION INFO: 0x%X\n",reg);
+  if (reg != 0x04) {
+      DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
+  }
+  EXIT();
+}
+
+void getVersion()
+{
+  uint8_t reg= getVERSIONR();
+  if (reg != 0x04) {
+      DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
+  }
 }
 
 
-uint8_t wizchip_spi_readbyte(void)        {
-  uint8_t rx;
-  BSP_SPI_WriteReadData(NULL,&rx,1);
-  return rx;
-}
+void w5500_ini_2(void){
+  ENTER();
+  uint16_t count=0;
+  //init SPI and CS
+  wiz_lowlevel_setup();
 
-void  wizchip_spi_writebyte(uint8_t wb) {
-  BSP_SPI_WriteReadData(&wb,NULL,1);
-}
+  //WIZ_CS_HIGH();
 
-void  wizchip_spi_readburst(uint8_t* pBuf, uint16_t len)  {
-  BSP_SPI_WriteReadData(NULL, pBuf, len);
-}
+  //wizchip_sw_reset();
+   
+  setMR(MR_RST);
+  do {
+		uint8_t mr = getMR();
+    printf("1. MR= 0x%X\n",mr);
+		if (mr == 0) break;
+		HAL_Delay(10);
+	} while (++count < 20);
+  setMR(0x08);
+	printf("2. MR= 0x%X\n",getMR());
+	setMR(0x10);
+	printf("3. MR= 0x%X\n",getMR());
+	setMR(0x00);
+	printf("4. MR= 0x%X\n",getMR());
 
-void  wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {
-  BSP_SPI_WriteReadData(pBuf, NULL, len);
+  uint8_t reg= getVERSIONR();
+  DEBUG("VERSION INFO: 0x%X\n",reg);
+  if (reg != 0x04) {
+      DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
+  }
+
+  EXIT();
 }
+///
+
 
 #ifdef __cplusplus
 }

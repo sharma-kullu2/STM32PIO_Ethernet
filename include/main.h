@@ -12,8 +12,20 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
+#define DBG 1
+
+#ifdef DBG
+#define DEBUG(...)  printf(__VA_ARGS__)
+#define ENTER()     printf("----->Entry: %s\n", __func__)
+#define EXIT()      printf("<-----Exit: %s\n", __func__)
+#else
+#define DEBUG(...) do {} while (0) //do nothing
+#define ENTER()
+#define EXIT()
+#endif
+
 //#define USE_LCD       /* enable LCD  */
-#define USE_DHCP       /* enable DHCP, if disabled static address is used */
+//#define USE_DHCP       /* enable DHCP, if disabled static address is used */
 
 #define DEST_IP_ADDR0   ((uint8_t)192)
 #define DEST_IP_ADDR1   ((uint8_t)168)

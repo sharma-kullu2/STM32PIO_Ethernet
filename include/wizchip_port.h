@@ -19,6 +19,12 @@ void wiz_transmit_pbuf(struct pbuf *buf);
 int wiz_read_receive_pbuf(struct pbuf **buf);
 void wiz_hwReset(void);
 
+//TEMP
+//TEMP
+//===========================================================================//
+void w5500_ini(void);
+void getVersion();
+
 #ifdef __cplusplus
 }
 #endif
