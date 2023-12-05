@@ -38,19 +38,23 @@ void spi_if_clr(void) {
  */
 void spi_if_set_link_state(struct netif *spi_if_netif)
 {
+  ENTER();
 	bool linkstate;
 	// Bit 0 is link status (1 = up), 1 is speed (1 = 100), 2 is duplex (1 = full)
 	volatile uint8_t phyReg = getPHYCFGR();
-	linkstate = phyReg & (1 << 0);
-	if (linkstate && !netif_is_link_up(spi_if_netif))
+	linkstate = phyReg & PHYCFGR_LNK_ON;
+	if (linkstate)
 	{
-    netif_set_link_up(spi_if_netif);
+    PrintNetInfo();
+    if(!netif_is_link_up(spi_if_netif))
+      netif_set_link_up(spi_if_netif);
 	}
   if(!linkstate){
     LWIP_DEBUGF(NETIF_DEBUG, ("Link Down\n"));
     netif_set_link_down(spi_if_netif);
     DEBUG("LINK DOWN\n");
   }
+  EXIT();
 }
 
 /**
@@ -82,32 +86,31 @@ void spi_if_input(struct netif *netif)
   //struct pbuf *p;
   //spi_if_clr(); //@Todo Check if interrupt is required
   spi_if_check_link_state(netif);
-  if (!netif_is_link_up(netif))
-			{
-				// Link must have come back up - need to check
-				spi_if_check_link_state(netif);
-			}
-  /* move received packet into a new pbuf */
-  res = wiz_read_receive_pbuf(&p);
+  if (netif_is_link_up(netif))
+	{
+				
+    /* move received packet into a new pbuf */
+    res = wiz_read_receive_pbuf(&p);
 
-  if (res !=0){
-    DEBUG("SOCK ERROR\n");
-    return;
-  }
-  /* no packet could be read, silently ignore this */
-  if (p == NULL) {
-    LWIP_DEBUGF(NETIF_DEBUG, ("didn't receive.\n"));
-    return;
-  }
+    if (res !=0){
+      DEBUG("SOCK ERROR\n");
+      return;
+    }
+    /* no packet could be read, silently ignore this */
+    if (p == NULL) {
+      LWIP_DEBUGF(NETIF_DEBUG, ("didn't receive.\n"));
+      return;
+    }
 
-  /* entry point to the LwIP stack */
-  err = netif->input(p, netif);
+    /* entry point to the LwIP stack */
+    err = netif->input(p, netif);
 
-  if (err != ERR_OK) {
-    LWIP_DEBUGF(NETIF_DEBUG, ("received with result %d\n", err));
-    DEBUG("received with result %d\n", err);
-    pbuf_free(p);
-    p = NULL;
+    if (err != ERR_OK) {
+      LWIP_DEBUGF(NETIF_DEBUG, ("received with result %d\n", err));
+      DEBUG("received with result %d\n", err);
+      pbuf_free(p);
+      p = NULL;
+    }
   }
 }
 
@@ -138,21 +141,30 @@ err_t spi_if_init(struct netif *netif)
   netif->flags|= NETIF_FLAG_ETHARP | NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHERNET;
   //spi_if_netif= netif;
   wiz_lowlevel_setup();
-  wiz_hwReset();
+  //wiz_hwReset();
+  wizchip_sw_reset();
+
   uint8_t reg= getVERSIONR();
   if (reg != 0x04) {
       DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
   }
-  setMR(MR_RST);
+  
+  //setMR(MR_RST);
   setSn_MR(0, Sn_MR_MACRAW | Sn_MR_MIP6B | Sn_MR_MMB);
   setSn_RXBUF_SIZE(0, 16);
   setSn_TXBUF_SIZE(0, 16);
+  wiz_PhyConf phy_conf;
+  phy_conf.by=PHY_CONFBY_SW; //No reset pin is used
+  phy_conf.mode= PHY_MODE_AUTONEGO;
+  phy_conf.duplex=PHY_DUPLEX_FULL;
+  phy_conf.speed=PHY_SPEED_100;
+  wizphy_setphyconf(&phy_conf);
   //setINTLEVEL(1);
   //setSIMR(1);
   //setPHYCFGR(0x58);
   //setPHYCFGR(0xD8);
   //setSn_IMR(0, (Sn_IR_RECV));
-  setSn_CR(0, Sn_CR_OPEN);
+  setSn_CR(0, Sn_CR_OPEN); //open socket
 #ifdef USE_DHCP
     /* handle periodic timers for LwIP */
   setSHAR(netif->hwaddr);
@@ -186,12 +198,28 @@ uint8_t spi_if_is_init(void)
   return 1; //@Todo
 }
 
+/**
+ * 
+*/
+void spi_if_set_net_info(struct netif *netif){
+  ENTER();
+  //uint8_t mac[6];
+  setSHAR(netif->hwaddr);
+  //uint8_t tmp[4];
+  //tmp[0]=(netif->gw) >>24;
+  setGAR(&netif->gw);
+  setSUBR(&netif->netmask);
+  setSIPR(&netif->ip_addr);
+  EXIT();
+}
 /*
 *
 */
 void spi_if_update_config(struct netif * netif)
 {
+  ENTER();
   LWIP_DEBUGF(NETIF_DEBUG, ("netif status changed %s\n",ip4addr_ntoa(netif_ip4_addr(netif))));
+  EXIT();
 }
 /**
   * @brief  Returns the current time in milliseconds

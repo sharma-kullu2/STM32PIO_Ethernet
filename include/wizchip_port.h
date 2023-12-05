@@ -24,6 +24,7 @@ void wiz_hwReset(void);
 //===========================================================================//
 void w5500_ini(void);
 void getVersion();
+void PrintNetInfo();
 
 #ifdef __cplusplus
 }

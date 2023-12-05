@@ -25,7 +25,7 @@
 #endif
 
 //#define USE_LCD       /* enable LCD  */
-//#define USE_DHCP       /* enable DHCP, if disabled static address is used */
+#define USE_DHCP       /* enable DHCP, if disabled static address is used */
 
 #define DEST_IP_ADDR0   ((uint8_t)192)
 #define DEST_IP_ADDR1   ((uint8_t)168)

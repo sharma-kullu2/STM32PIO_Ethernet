@@ -33,18 +33,21 @@ int main(void) {
   BSP_LED_On(LED2);
   HAL_Delay(10*1000);
   /* Output a message on Hyperterminal using printf function */
-  printf("\n\r**********************************\n\r");
-  printf("\n\r STM32 F103C8 W5500 SPIEthernet Device\n\r");
-  printf("\n\r**********************************\n\r");
+  printf("\n\r***************************************\n\r");
+  printf("\n\r*STM32 F103C8 W5500 SPIEthernet Device*\n\r");
+  printf("\n\r***************************************\n\r");
 
-#if 0
+#if 1
   /*init lwip stack*/
   lwip_init();
   /* Configure the Network interface */
   Netif_Config();
   /* tcp echo server Init */
   tcp_echoserver_init();
-  
+
+  /*get net info for debug*/
+  PrintNetInfo();
+
   /* Notify user about the network interface config */
   User_notification(&gnetif);
 #else
@@ -57,7 +60,7 @@ int main(void) {
        to the lwIP for handling */
     DEBUG("DEBUG : inside while\n");
     //BSP_LED_Toggle(LED2);
-  #if 1
+  #if 0
     //getVersion();
     BSP_LED_Off(LED2);
     printf("LED OFF \n\r");
@@ -119,6 +122,8 @@ static void Netif_Config(void)
   /* Add the network interface */    
   //netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &spi_if_init, &ethernet_input);
   netif_add(&gnetif, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY, NULL, &spi_if_init, &netif_input);
+
+  spi_if_set_net_info(&gnetif);
 
   DEBUG("---netif add\n");
 

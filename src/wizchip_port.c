@@ -38,32 +38,32 @@ extern "C" {
 
 
 uint8_t wizchip_spi_readbyte(void)        {
-  ENTER();
+  //ENTER();
   uint8_t rx=0;
   BSP_SPI_ReadData( &rx, 1);
   DEBUG("readbyte : 0x%X\n",rx);
-  EXIT();
+  //EXIT();
   return rx;
 }
 
 void  wizchip_spi_writebyte(uint8_t wb) {
-  ENTER();
-  DEBUG("writebyte : 0x%X\n",wb);
+  //ENTER();
+  //DEBUG("writebyte : 0x%X\n",wb);
   //BSP_SPI_Write((uint8_t)wb);
   BSP_SPI_WriteData(&wb, 1);
-  EXIT();
+  //EXIT();
 }
 
 void  wizchip_spi_readburst(uint8_t* pBuf, uint16_t len)  {
-  ENTER();
+  //ENTER();
   BSP_SPI_ReadData(pBuf, len);
-  EXIT();
+  //EXIT();
 }
 
 void  wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {
-  ENTER();
+  //ENTER();
   BSP_SPI_WriteData(pBuf, len);
-  EXIT();
+  //EXIT();
 }
 
 
@@ -124,60 +124,40 @@ int wiz_read_receive_pbuf(struct pbuf **buf)
   ENTER();
   //uint8_t header[6];
   uint16_t readlen;
-  uint16_t framelen;
+  //uint16_t framelen;
   //struct pbuf * p;
 
   if (*buf != NULL)
     return 1;
 
-  while(1)
-  {
-    readlen = getSn_RX_RSR(0);
-    uint8_t sck = getSn_SR(0);
-    if (sck != SOCK_ESTABLISHED){
-            if(sck == SOCK_CLOSE_WAIT){
-               if(readlen != 0) break;
-               else if(getSn_TX_FSR(0) == getSn_TxMAX(0)){
-                  return 1;
-               }
-            }
-            else{
-               return 1;
-            }
-         }
-         //if((sock_io_mode & (1<<0)) && (recvsize == 0)) return SOCK_BUSY;
-         if(readlen != 0) break;
-  };
+  //read length of RX buffer
+  readlen = getSn_RX_RSR(0);
+  if(readlen == 0) 
+    return 1;
 
-  DEBUG("%s : READLEN : %d\n",__func__ ,readlen);
   //uint16_t rxRd= 
   //getSn_RX_RD(0);
   if (readlen < 4) {
     /* This could be indicative of a crashed (brown-outed?) controller */
     goto end;
   }
-  wiz_recv_data(0, (uint8_t *)&framelen, 2);
-  setSn_CR(0, Sn_CR_RECV);
-  //__bswap16(framelen); //!< didn't work for me
-  framelen= (framelen << 8) | (framelen >> 8);
-
   /* workaround for https://savannah.nongnu.org/bugs/index.php?50040 */
-  if (framelen > 32000) {
-    wiz_recv_ignore(0, framelen);
+  if (readlen > 32000) {
+    wiz_recv_ignore(0, readlen);
     setSn_CR(0, Sn_CR_RECV);
     goto end;
   }
 
-  framelen-= 2;
-
-  *buf = pbuf_alloc(PBUF_RAW, (framelen), PBUF_RAM);
+  *buf = pbuf_alloc(PBUF_RAW, (readlen), PBUF_RAM);
 
   if (*buf == NULL) {
     goto end;
   }
 
-  wiz_recv_data(0, (uint8_t*)(*buf)->payload, framelen);
+  wiz_recv_data(0, (uint8_t*)(*buf)->payload, readlen);
   setSn_CR(0, Sn_CR_RECV);
+
+  
   EXIT();
 end:
   return (*buf == NULL) ? 2 : 0;
@@ -286,6 +266,16 @@ void w5500_ini_2(void){
       DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
   }
 
+  EXIT();
+}
+
+void PrintNetInfo(){
+  ENTER();
+  wiz_NetInfo netinfo;
+  wizchip_getnetinfo(&netinfo);
+  DEBUG("IP ADDR : %d.%d.%d.%d\n",netinfo.ip[0],netinfo.ip[1],netinfo.ip[2],netinfo.ip[3]);
+  DEBUG("NETMASK : %d.%d.%d.%d\n",netinfo.sn[0],netinfo.sn[1],netinfo.sn[2],netinfo.sn[3]);
+  DEBUG("GATEWAY : %d.%d.%d.%d\n",netinfo.gw[0],netinfo.gw[1],netinfo.gw[2],netinfo.gw[3]);
   EXIT();
 }
 ///

@@ -161,11 +161,11 @@ void DHCP_Process(struct netif *netif)
       ip_addr_set_zero_ip4(&netif->netmask);
       ip_addr_set_zero_ip4(&netif->gw);
       DHCP_state = DHCP_WAIT_ADDRESS;
-      dhcp_start(netif);
+      err_t res=dhcp_start(netif);
 #ifdef USE_LCD
       LCD_UsrLog ("  State: Looking for DHCP server ...\n");
 #else
-      DEBUG("  State: Looking for DHCP server ...\n");
+      DEBUG("  State: Looking for DHCP server ... : %d\n",res);
 #endif
     }
     break;

@@ -22,6 +22,7 @@ err_t spi_if_init(struct netif *netif);
 void spi_if_set_link_state(struct netif *spi_if_netif);
 void spi_if_input(struct netif *netif);
 void spi_if_set_mac_addr(const uint8_t *mac);
+void spi_if_set_net_info(struct netif *netif);
 uint8_t spi_if_is_init(void);
 void spi_if_update_config(struct netif * netif);
 
