@@ -25,24 +25,38 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "lwip/netif.h"
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* DHCP process states */
+#define DHCP_SOCK                   0
 #define DHCP_OFF                   (uint8_t) 0
 #define DHCP_START                 (uint8_t) 1
 #define DHCP_WAIT_ADDRESS          (uint8_t) 2
 #define DHCP_ADDRESS_ASSIGNED      (uint8_t) 3
 #define DHCP_TIMEOUT               (uint8_t) 4
 #define DHCP_LINK_DOWN             (uint8_t) 5
- 
+
 /* Exported macro ------------------------------------------------------------*/
+#define MAX_SOCK          2
+typedef enum _http_sock{
+  HTTP_SOCK_1=1,
+  HTTP_SOCK_2
+} http_sock;
+
+typedef struct _http_config{
+  uint8_t txbuf[512];
+  uint8_t rxbuf[512];
+  uint8_t sock[MAX_SOCK];
+} http_config;
+
+void Init_Http_Server();
+void Run_Http_Server();
+
 /* Exported functions ------------------------------------------------------- */
-void User_notification(struct netif *netif);
 #ifdef USE_DHCP
-void DHCP_Process(struct netif *netif);
-void DHCP_Periodic_Handle(struct netif *netif);
+void DHCP_Process();
+void DHCP_Periodic_Handle();
+void Init_Dhcp(uint8_t* buf);
 #endif  
 
 #ifdef __cplusplus

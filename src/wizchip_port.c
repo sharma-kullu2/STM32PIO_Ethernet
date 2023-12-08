@@ -13,7 +13,7 @@
 #include "main.h"
 #include "wizchip_port.h"
 #include "wizchip_conf.h"
-
+#include "socket.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,13 +35,19 @@ extern "C" {
 #define WIZ_CS_LOW()       HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_RESET);//GPIO_Off(SD_CS_GPIO_PORT, SD_CS_PIN)
 #define WIZ_CS_HIGH()      HAL_GPIO_WritePin(WIZ_CS_GPIO_PORT, WIZ_CS_PIN, GPIO_PIN_SET);//GPIO_On(SD_CS_GPIO_PORT, SD_CS_PIN)
 
+#define DEFINE_MACADDR(name, a, b, c, d, e, f)  uint8_t name[6] = {a, b, c, d, e, f}
 
+#define BUF_INIT(name,size)     \
+  uint8_t name[size];           \
+  for (int i=0;i<size;i++){     \
+    name[i]=0;                  \
+  }                                                        
 
 uint8_t wizchip_spi_readbyte(void)        {
   //ENTER();
   uint8_t rx=0;
   BSP_SPI_ReadData( &rx, 1);
-  DEBUG("readbyte : 0x%X\n",rx);
+  //DEBUG("readbyte : 0x%X\n",rx);
   //EXIT();
   return rx;
 }
@@ -100,69 +106,6 @@ void wiz_lowlevel_setup(void)
   EXIT();
 }
 
-void wiz_transmit_pbuf(struct pbuf *p)
-{
-  ENTER();
-  uint16_t freeSize= getSn_TX_FSR(0);
-  uint16_t length = p->tot_len;
-
-  if (freeSize < length) {
-    /* TODO: Handle insufficent space in buffer */
-  }
-  while(1) {
-    wiz_send_data(0, (uint8_t*)p->payload, p->len);
-    if (p->len == p->tot_len)
-      break;
-    p = p->next;
-  }
-  setSn_CR(0, Sn_CR_SEND);
-  EXIT();
-}
-
-int wiz_read_receive_pbuf(struct pbuf **buf)
-{
-  ENTER();
-  //uint8_t header[6];
-  uint16_t readlen;
-  //uint16_t framelen;
-  //struct pbuf * p;
-
-  if (*buf != NULL)
-    return 1;
-
-  //read length of RX buffer
-  readlen = getSn_RX_RSR(0);
-  if(readlen == 0) 
-    return 1;
-
-  //uint16_t rxRd= 
-  //getSn_RX_RD(0);
-  if (readlen < 4) {
-    /* This could be indicative of a crashed (brown-outed?) controller */
-    goto end;
-  }
-  /* workaround for https://savannah.nongnu.org/bugs/index.php?50040 */
-  if (readlen > 32000) {
-    wiz_recv_ignore(0, readlen);
-    setSn_CR(0, Sn_CR_RECV);
-    goto end;
-  }
-
-  *buf = pbuf_alloc(PBUF_RAW, (readlen), PBUF_RAM);
-
-  if (*buf == NULL) {
-    goto end;
-  }
-
-  wiz_recv_data(0, (uint8_t*)(*buf)->payload, readlen);
-  setSn_CR(0, Sn_CR_RECV);
-
-  
-  EXIT();
-end:
-  return (*buf == NULL) ? 2 : 0;
-}
-
 void    wizchip_cris_enter(void)           {
 //ENTER();
 //EXIT();
@@ -209,33 +152,53 @@ void wiz_hwReset(void) {
     EXIT();
 }
 
-//TEMP
 //===========================================================================//
-void w5500_ini(void){
+/**
+ * 
+*/
+uint8_t Init_W5500(void){
   ENTER();
-  uint8_t temp;
-  uint8_t W5500FifoSize[2][8] = {{2, 2, 2, 2, 2, 2, 2, 2, }, {2, 2, 2, 2, 2, 2, 2, 2}};
-
-  //wizchip_cs_deselect(); //Chip OFF
-  
+  /*Init ucontroller hardware*/
   wiz_lowlevel_setup();
+  /* soft reset chip*/
+  wizchip_sw_reset();
+  /* read version*/
   uint8_t reg= getVERSIONR();
   DEBUG("VERSION INFO: 0x%X\n",reg);
   if (reg != 0x04) {
-      DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
+      DEBUG("Chip is not W5500 | got version: 0x%X\n",reg);
+      return 0;
   }
+  /* set buffers for all sockets (max 16KB) */
+  /*BUF_INIT(tx,16);
+  BUF_INIT(rx,16);
+  if (wizchip_init(tx,rx)!= 0){
+    DEBUG("Setting Wizchip Buffer Failed\n");
+    return 0;
+  }*/
+#ifdef USE_DHCP
+    /* set mac address for DHCP  */
+  DEFINE_MACADDR(MACADDR,MAC0,MAC1,MAC2,MAC3,MAC4,MAC5);
+  setSHAR(MACADDR);
+#endif 
   EXIT();
+  return 1;//success
 }
 
-void getVersion()
-{
-  uint8_t reg= getVERSIONR();
-  if (reg != 0x04) {
-      DEBUG("ERROR: getVersionr | got 0x%X\n",reg);
-  }
+/**@brief: Check whether link is ON/NOT
+ * 
+*/
+uint8_t wiz_link_state(){
+    if(wizphy_getphylink()==1){
+      return 1;
+    }
+    else {
+      DEBUG("------LINK DOWN------\n");
+      return 0;
+    }
 }
 
-
+//Temp FNs
 void w5500_ini_2(void){
   ENTER();
   uint16_t count=0;

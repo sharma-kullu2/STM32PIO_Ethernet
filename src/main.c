@@ -5,61 +5,45 @@
 ******************************************************************************/
 
 #include "main.h"
-#include "lwip/netif.h"
-#include "lwip/opt.h"
-#include "lwip/init.h"
-#include "lwip/netif.h"
-#include "lwip/timeouts.h"
-#include "netif/etharp.h"
-#include "spiif.h"
 #include "app_ethernet.h"
-#include "tcp_echoserver.h"
+#include "wizchip_port.h" 
 
 /* Private function prototypes -----------------------------------------------*/
-struct netif gnetif;
+;
 static void Error_Handler(void);
 static void SystemClock_Config(void);
-static void Netif_Config(void);
 
+uint8_t DHCP_Buf[512];
 /*Entry Point-----------------------------------------------------------------*/
 int main(void) {
   HAL_Init();
   SystemClock_Config();
-  //LED_Init();
   BSP_LED_Init(LED2);
   if(BSP_UART_Init()!=HAL_OK){
     Error_Handler();
   }
   BSP_LED_On(LED2);
-  HAL_Delay(10*1000);
+  HAL_Delay(5*1000); ///Temp
   /* Output a message on Hyperterminal using printf function */
-  printf("\n\r***************************************\n\r");
-  printf("\n\r*STM32 F103C8 W5500 SPIEthernet Device*\n\r");
-  printf("\n\r***************************************\n\r");
+  printf("\n\r********************************************\n\r");
+  printf("\n\r*STM32 F103C8 W5500 SPIEthernet Device v0.1*\n\r");
+  printf("\n\r********************************************\n\r");
 
-#if 1
-  /*init lwip stack*/
-  lwip_init();
-  /* Configure the Network interface */
-  Netif_Config();
-  /* tcp echo server Init */
-  tcp_echoserver_init();
-
-  /*get net info for debug*/
-  PrintNetInfo();
-
-  /* Notify user about the network interface config */
-  User_notification(&gnetif);
-#else
-  w5500_ini_2();
+  if (!Init_W5500()){
+    DEBUG("Init W5500 Failed\n");
+    Error_Handler();
+  }
+ 
+#ifdef USE_DHCP
+  /*Init DHCP*/
+  Init_Dhcp(DHCP_Buf);
 #endif
+  Init_Http_Server();
   /* Infinite loop */
   while (1)
   {  
-    /* Read a received packet from the Ethernet buffers and send it 
-       to the lwIP for handling */
-    DEBUG("DEBUG : inside while\n");
-    //BSP_LED_Toggle(LED2);
+    //DEBUG("DEBUG : inside while\n");
+    BSP_LED_Toggle(LED2);
   #if 0
     //getVersion();
     BSP_LED_Off(LED2);
@@ -69,17 +53,10 @@ int main(void) {
     printf("LED ON \n\r");
     HAL_Delay(500);
   #else
-
-    spi_if_input(&gnetif);
-
-    spi_if_set_link_state(&gnetif);
-
-    /* Handle timeouts */
-    sys_check_timeouts();
-
+    Run_Http_Server();
 #ifdef USE_DHCP
-    /* handle periodic timers for LwIP */
-    DHCP_Periodic_Handle(&gnetif);
+    /* handle periodic timers for DHCP */
+    DHCP_Periodic_Handle();
 #endif 
   #endif
   }
@@ -102,51 +79,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 
 /*Private Function definitions-----------------------------------------------*/
-
-/**
-  * @brief  Configurates the network interface
-  * @param  None
-  * @retval None
-  */
-static void Netif_Config(void)
-{
-  ENTER();
-  ip_addr_t ipaddr;
-  ip_addr_t netmask;
-  ip_addr_t gw;
-  
-  IP_ADDR4(&ipaddr,IP_ADDR0,IP_ADDR1,IP_ADDR2,IP_ADDR3);
-  IP_ADDR4(&netmask,NETMASK_ADDR0,NETMASK_ADDR1,NETMASK_ADDR2,NETMASK_ADDR3);
-  IP_ADDR4(&gw,GW_ADDR0,GW_ADDR1,GW_ADDR2,GW_ADDR3);
-  
-  /* Add the network interface */    
-  //netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &spi_if_init, &ethernet_input);
-  netif_add(&gnetif, IP4_ADDR_ANY, IP4_ADDR_ANY, IP4_ADDR_ANY, NULL, &spi_if_init, &netif_input);
-
-  spi_if_set_net_info(&gnetif);
-
-  DEBUG("---netif add\n");
-
-  /* Registers the default network interface */
-  netif_set_default(&gnetif);
-  
-  if (netif_is_link_up(&gnetif))
-  {
-    /* When the netif is fully configured this function must be called */
-    netif_set_up(&gnetif);
-  }
-  else
-  {
-    /* When the netif link is down this function must be called */
-    netif_set_down(&gnetif);
-  }
-
-  /* Set the link callback function, this function is called on change of link status */
-  //@Todo
-  //netif_set_link_callback(&gnetif, ethernetif_update_config);
-  netif_set_link_callback(&gnetif, spi_if_update_config);
-  EXIT();
-}
 
 /**
   * @brief  Error_Handler : indicates UART could not start hence turns the LED 2 on

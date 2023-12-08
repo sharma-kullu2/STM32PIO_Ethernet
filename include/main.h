@@ -52,6 +52,13 @@
 #define GW_ADDR2   ((uint8_t)0)
 #define GW_ADDR3   ((uint8_t)1)
 
+
+#define MAC0  0x0C
+#define MAC1  0x4B
+#define MAC2  0x0A
+#define MAC3  0x01
+#define MAC4  0x0E
+#define MAC5  0x02
 /* Exported functions ------------------------------------------------------- */
 
 #endif /* __MAIN_H */
