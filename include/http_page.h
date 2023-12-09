@@ -4,8 +4,17 @@
 
 #include <stdio.h>
 
-uint8_t name[] = {"Hello"};
+uint8_t name[] = {"index.html"};
 
-uint8_t content[] = {"Hello World"};
+uint8_t content[] = {
+"<html>"
+  "<head>"
+    "<title>Hello World</title>"
+  "</head>"
+  "<body>"
+    "<h1>Hello, World!</h1>"
+  "</body>"
+"</html>"
+};
 
 #endif
