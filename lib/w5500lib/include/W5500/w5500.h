@@ -1197,7 +1197,7 @@ extern "C" {
  * @sa WIZCHIP_READ(), WIZCHIP_WRITE(), WIZCHIP_READ_BUF(), WIZCHIP_WRITE_BUF()
  * @sa WIZCHIP_CRITICAL_ENTER()
  */
-#define WIZCHIP_CRITICAL_EXIT()     WIZCHIP.CRIS._exit() //will work in multithreading
+#define WIZCHIP_CRITICAL_EXIT()     WIZCHIP.CRIS._exit()
 
 
 ////////////////////////

@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "socket.h"
-#include "httpParser.h"
+#include "httpServer/httpParser.h"
 
 /*****************************************************************************
  * Public types/enumerations/variables

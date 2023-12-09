@@ -1,0 +1,12 @@
+{
+    "name": "W5500",
+    "version": "1.0.0",
+    "description": "W5500 Iolibrary by Wiznet",
+    "frameworks": ["*"],
+    "platforms": ["*"],
+    "license": "MIT",
+    "dependencies": {},
+    "build": {
+        "libArchive": false
+    }
+}

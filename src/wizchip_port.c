@@ -14,6 +14,7 @@
 #include "wizchip_port.h"
 #include "wizchip_conf.h"
 #include "socket.h"
+#include "arch.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +44,13 @@ extern "C" {
     name[i]=0;                  \
   }                                                        
 
-uint8_t wizchip_spi_readbyte(void)        {
+void MSleep(uint32_t n){
+  ENTER();
+  HAL_Delay(n);
+  EXIT();
+}
+
+uint8_t wiz_spi_readbyte(void)        {
   //ENTER();
   uint8_t rx=0;
   BSP_SPI_ReadData( &rx, 1);
@@ -52,7 +59,7 @@ uint8_t wizchip_spi_readbyte(void)        {
   return rx;
 }
 
-void  wizchip_spi_writebyte(uint8_t wb) {
+void  wiz_spi_writebyte(uint8_t wb) {
   //ENTER();
   //DEBUG("writebyte : 0x%X\n",wb);
   //BSP_SPI_Write((uint8_t)wb);
@@ -60,18 +67,39 @@ void  wizchip_spi_writebyte(uint8_t wb) {
   //EXIT();
 }
 
-void  wizchip_spi_readburst(uint8_t* pBuf, uint16_t len)  {
+void  wiz_spi_readburst(uint8_t* pBuf, uint16_t len)  {
   //ENTER();
   BSP_SPI_ReadData(pBuf, len);
   //EXIT();
 }
 
-void  wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {
+void  wiz_spi_writeburst(uint8_t* pBuf, uint16_t len) {
   //ENTER();
   BSP_SPI_WriteData(pBuf, len);
   //EXIT();
 }
 
+void    wiz_cris_enter(void)           {
+//ENTER();
+//EXIT();
+}
+
+void    wiz_cris_exit(void)          {
+//ENTER();
+//EXIT();
+}
+
+void  wiz_cs_select(void)            {
+  //ENTER();
+  WIZ_CS_LOW(); 
+  //EXIT();
+}
+
+void  wiz_cs_deselect(void)          {
+  //ENTER();
+  WIZ_CS_HIGH();
+  //EXIT();
+}
 
 
 void wiz_lowlevel_setup(void)
@@ -101,40 +129,20 @@ void wiz_lowlevel_setup(void)
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);*/
   //
   
-  reg_wizchip_spi_cbfunc(&wizchip_spi_readbyte,&wizchip_spi_writebyte);
-  reg_wizchip_spiburst_cbfunc(&wizchip_spi_readburst,&wizchip_spi_writeburst);
+  reg_wizchip_spi_cbfunc(&wiz_spi_readbyte,&wiz_spi_writebyte);
+  reg_wizchip_spiburst_cbfunc(&wiz_spi_readburst,&wiz_spi_writeburst);
+  reg_wizchip_cs_cbfunc(&wiz_cs_select,&wiz_cs_deselect);
+  reg_wizchip_sleep_cbfunc(&MSleep);
   EXIT();
 }
 
-void    wizchip_cris_enter(void)           {
-//ENTER();
-//EXIT();
-}
-
-void    wizchip_cris_exit(void)          {
-//ENTER();
-//EXIT();
-}
-
-void  wizchip_cs_select(void)            {
-  //ENTER();
-  WIZ_CS_LOW(); 
-  //EXIT();
-}
-
-void  wizchip_cs_deselect(void)          {
-  //ENTER();
-  WIZ_CS_HIGH();
-  //EXIT();
-}
-
-void  wizchip_rst_assert(void)            {
+void  wiz_rst_assert(void)            {
   ENTER();
   HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_RESET);
   EXIT();
 }
 
-void  wizchip_rst_deassert(void)          {
+void  wiz_rst_deassert(void)          {
   ENTER();
   HAL_GPIO_WritePin(WIZ_RST_GPIO_PORT, WIZ_RST_PIN, GPIO_PIN_SET);
   EXIT();
@@ -144,9 +152,9 @@ void  wizchip_rst_deassert(void)          {
 void wiz_hwReset(void) {
     ENTER();
     uint32_t t= 168000;
-    wizchip_rst_assert();
+    wiz_rst_assert();
     while(--t);
-    wizchip_rst_deassert();
+    wiz_rst_deassert();
     t= 168000;
     while(--t);
     EXIT();

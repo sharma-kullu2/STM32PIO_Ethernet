@@ -51,7 +51,8 @@
 //*****************************************************************************
 
 #include "socket.h"
-#include "dhcp.h"
+#include "arch.h"
+#include "DHCP/dhcp.h"
 
 /* If you want to display debug & processing message, Define _DHCP_DEBUG_ in dhcp.h */
 
@@ -298,6 +299,14 @@ void makeDHCPMSG(void)
    uint8_t* ptmp;
    uint8_t  i;
    getSHAR(bk_mac);
+   ///////////////////////////////
+   /*printf("-----got mac :\n");
+   for (uint8_t i=0;i<6;i++){
+	printf("0x%x\t",bk_mac[i]);
+   }
+   printf("\n");*/
+   ////////////////////////////////
+   msleep(20);
 	pDHCPMSG->op      = DHCP_BOOTREQUEST;
 	pDHCPMSG->htype   = DHCP_HTYPE10MB;
 	pDHCPMSG->hlen    = DHCP_HLENETHERNET;
@@ -311,34 +320,34 @@ void makeDHCPMSG(void)
 	ptmp              = (uint8_t*)(&pDHCPMSG->flags);	
 	*(ptmp+0)         = (uint8_t)((DHCP_FLAGSBROADCAST & 0xFF00) >> 8);
 	*(ptmp+1)         = (uint8_t)((DHCP_FLAGSBROADCAST & 0x00FF) >> 0);
-
+	msleep(10);
 	pDHCPMSG->ciaddr[0] = 0;
 	pDHCPMSG->ciaddr[1] = 0;
 	pDHCPMSG->ciaddr[2] = 0;
 	pDHCPMSG->ciaddr[3] = 0;
-
+	msleep(10);
 	pDHCPMSG->yiaddr[0] = 0;
 	pDHCPMSG->yiaddr[1] = 0;
 	pDHCPMSG->yiaddr[2] = 0;
 	pDHCPMSG->yiaddr[3] = 0;
-
+	msleep(10);
 	pDHCPMSG->siaddr[0] = 0;
 	pDHCPMSG->siaddr[1] = 0;
 	pDHCPMSG->siaddr[2] = 0;
 	pDHCPMSG->siaddr[3] = 0;
-
+	msleep(10);
 	pDHCPMSG->giaddr[0] = 0;
 	pDHCPMSG->giaddr[1] = 0;
 	pDHCPMSG->giaddr[2] = 0;
 	pDHCPMSG->giaddr[3] = 0;
-
+	msleep(10);
 	pDHCPMSG->chaddr[0] = DHCP_CHADDR[0];
 	pDHCPMSG->chaddr[1] = DHCP_CHADDR[1];
 	pDHCPMSG->chaddr[2] = DHCP_CHADDR[2];
 	pDHCPMSG->chaddr[3] = DHCP_CHADDR[3];
 	pDHCPMSG->chaddr[4] = DHCP_CHADDR[4];
 	pDHCPMSG->chaddr[5] = DHCP_CHADDR[5];
-
+	msleep(10);
 	for (i = 6; i < 16; i++)  pDHCPMSG->chaddr[i] = 0;
 	for (i = 0; i < 64; i++)  pDHCPMSG->sname[i]  = 0;
 	for (i = 0; i < 128; i++) pDHCPMSG->file[i]   = 0;
@@ -348,6 +357,7 @@ void makeDHCPMSG(void)
 	pDHCPMSG->OPT[1] = (uint8_t)((MAGIC_COOKIE & 0x00FF0000) >> 16);
 	pDHCPMSG->OPT[2] = (uint8_t)((MAGIC_COOKIE & 0x0000FF00) >>  8);
 	pDHCPMSG->OPT[3] = (uint8_t) (MAGIC_COOKIE & 0x000000FF) >>  0;
+	
 }
 
 /* SEND DHCP DISCOVER */
@@ -601,7 +611,9 @@ int8_t parseDHCPMSG(void)
       printf("DHCP message : %d.%d.%d.%d(%d) %d received. \r\n",svr_addr[0],svr_addr[1],svr_addr[2], svr_addr[3],svr_port, len);
    #endif   
    }
-   else return 0;
+   else {
+	return 0;
+	}
 	if (svr_port == DHCP_SERVER_PORT) {
       // compare mac address
 		if ( (pDHCPMSG->chaddr[0] != DHCP_CHADDR[0]) || (pDHCPMSG->chaddr[1] != DHCP_CHADDR[1]) ||
@@ -715,9 +727,6 @@ uint8_t DHCP_run(void)
 
 	ret = DHCP_RUNNING;
 	type = parseDHCPMSG();
-#ifdef _DHCP_DEBUG_
-	printf("> DHCP_run at state= %d , type= %d\n",dhcp_state,type);
-#endif
 	switch ( dhcp_state ) {
 	   case STATE_DHCP_INIT     :
          DHCP_allocated_ip[0] = 0;
@@ -831,9 +840,6 @@ uint8_t DHCP_run(void)
 		default :
    		break;
 	}
-#ifdef _DHCP_DEBUG_
-	printf("> DHCP_RUN Ret: %d\r\n",ret);
-#endif
 
 	return ret;
 }
@@ -853,18 +859,18 @@ uint8_t check_DHCP_timeout(void)
 
 			switch ( dhcp_state ) {
 				case STATE_DHCP_DISCOVER :
-					printf("<<timeout>> state : STATE_DHCP_DISCOVER\r\n");
+//					printf("<<timeout>> state : STATE_DHCP_DISCOVER\r\n");
 					send_DHCP_DISCOVER();
 				break;
 		
 				case STATE_DHCP_REQUEST :
-					printf("<<timeout>> state : STATE_DHCP_REQUEST\r\n");
+//					printf("<<timeout>> state : STATE_DHCP_REQUEST\r\n");
 
 					send_DHCP_REQUEST();
 				break;
 
 				case STATE_DHCP_REREQUEST :
-					printf("<<timeout>> state : STATE_DHCP_REREQUEST\r\n");
+//					printf("<<timeout>> state : STATE_DHCP_REREQUEST\r\n");
 					
 					send_DHCP_REQUEST();
 				break;

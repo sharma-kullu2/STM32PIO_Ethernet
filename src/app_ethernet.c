@@ -9,9 +9,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #ifdef USE_DHCP
-#include "dhcp.h"
+#include "DHCP/dhcp.h"
 #endif
-#include "httpServer.h"
+#include "httpServer/httpServer.h"
 #include "wizchip_port.h"
 #include "app_ethernet.h"
 #include "http_page.h"

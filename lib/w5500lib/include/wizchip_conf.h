@@ -59,7 +59,6 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "main.h"
 /**
  * @brief Select WIZCHIP.
  * @todo You should select one, \b W5100, \b W5100S, \b W5200, \b W5300, \b W5500 or etc. \n\n
@@ -155,7 +154,7 @@ extern "C" {
 #endif
 //A20150601 : Define the unit of IO DATA.   
    typedef   uint8_t   iodata_t;
-   #include "w5500.h"
+   #include "W5500/w5500.h"
 #elif ( _WIZCHIP_ == W5300)
    #define _WIZCHIP_ID_                 "W5300\0"
 /**
@@ -655,7 +654,6 @@ void wizchip_settimeout(wiz_NetTimeout* nettime);
  * @param nettime @ref _RTR_ value and @ref _RCR_ value. Refer to @ref wiz_NetTimeout. 
  */
 void wizchip_gettimeout(wiz_NetTimeout* nettime);
-
 #ifdef __cplusplus
  }
 #endif

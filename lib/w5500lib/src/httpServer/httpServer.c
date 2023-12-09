@@ -5,9 +5,9 @@
 #include "socket.h"
 #include "wizchip_conf.h"
 
-#include "httpServer.h"
-#include "httpParser.h"
-#include "httpUtil.h"
+#include "httpServer/httpServer.h"
+#include "httpServer/httpParser.h"
+#include "httpServer/httpUtil.h"
 
 #ifdef	_USE_SDCARD_
 #include "ff.h" 	// header file for FatFs library (FAT file system)

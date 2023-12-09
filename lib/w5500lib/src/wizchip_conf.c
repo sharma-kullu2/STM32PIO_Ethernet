@@ -54,9 +54,6 @@
 
 #include "wizchip_conf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /////////////
 //M20150401 : Remove ; in the default callback function such as wizchip_cris_enter(), wizchip_cs_select() and etc.
 /////////////
@@ -67,14 +64,15 @@ extern "C" {
  * null function is called.
  */
 //void 	  wizchip_cris_enter(void)           {};
-__weak  void 	  wizchip_cris_enter(void)           {}
+void 	  wizchip_cris_enter(void)           {}
+
 /**
  * @brief Default function to disable interrupt.
  * @note This function help not to access wrong address. If you do not describe this function or register any functions,
  * null function is called.
  */
 //void 	  wizchip_cris_exit(void)          {};
-__weak  void 	  wizchip_cris_exit(void)          {}
+void 	  wizchip_cris_exit(void)          {}
 
 /**
  * @brief Default function to select chip.
@@ -82,7 +80,7 @@ __weak  void 	  wizchip_cris_exit(void)          {}
  * null function is called.
  */
 //void 	wizchip_cs_select(void)            {};
-__weak void 	wizchip_cs_select(void)            {}
+void 	wizchip_cs_select(void)            {}
 
 /**
  * @brief Default function to deselect chip.
@@ -90,7 +88,7 @@ __weak void 	wizchip_cs_select(void)            {}
  * null function is called.
  */
 //void 	wizchip_cs_deselect(void)          {};
-__weak void 	wizchip_cs_deselect(void)          {}
+void 	wizchip_cs_deselect(void)          {}
 
 /**
  * @brief Default function to read in direct or indirect interface.
@@ -99,7 +97,7 @@ __weak void 	wizchip_cs_deselect(void)          {}
  */
  //M20150601 : Rename the function for integrating with W5300
 //uint8_t wizchip_bus_readbyte(uint32_t AddrSel) { return * ((volatile uint8_t *)((ptrdiff_t) AddrSel)); }
-__weak iodata_t wizchip_bus_readdata(uint32_t AddrSel) { return * ((volatile iodata_t *)((ptrdiff_t) AddrSel)); }
+iodata_t wizchip_bus_readdata(uint32_t AddrSel) { return * ((volatile iodata_t *)((ptrdiff_t) AddrSel)); }
 
 /**
  * @brief Default function to write in direct or indirect interface.
@@ -108,7 +106,7 @@ __weak iodata_t wizchip_bus_readdata(uint32_t AddrSel) { return * ((volatile iod
  */
 //M20150601 : Rename the function for integrating with W5300
 //void 	wizchip_bus_writebyte(uint32_t AddrSel, uint8_t wb)  { *((volatile uint8_t*)((ptrdiff_t)AddrSel)) = wb; }
-__weak void 	wizchip_bus_writedata(uint32_t AddrSel, iodata_t wb)  { *((volatile iodata_t*)((ptrdiff_t)AddrSel)) = wb; }
+void 	wizchip_bus_writedata(uint32_t AddrSel, iodata_t wb)  { *((volatile iodata_t*)((ptrdiff_t)AddrSel)) = wb; }
 
 /**
  * @brief Default function to read in SPI interface.
@@ -116,7 +114,7 @@ __weak void 	wizchip_bus_writedata(uint32_t AddrSel, iodata_t wb)  { *((volatile
  * null function is called.
  */
 //uint8_t wizchip_spi_readbyte(void)        {return 0;};
-__weak uint8_t wizchip_spi_readbyte(void)        {return 0;}
+uint8_t wizchip_spi_readbyte(void)        {return 0;}
 
 /**
  * @brief Default function to write in SPI interface.
@@ -124,7 +122,7 @@ __weak uint8_t wizchip_spi_readbyte(void)        {return 0;}
  * null function is called.
  */
 //void 	wizchip_spi_writebyte(uint8_t wb) {};
-__weak void 	wizchip_spi_writebyte(uint8_t wb) {}
+void 	wizchip_spi_writebyte(uint8_t wb) {}
 
 /**
  * @brief Default function to burst read in SPI interface.
@@ -132,7 +130,7 @@ __weak void 	wizchip_spi_writebyte(uint8_t wb) {}
  * null function is called.
  */
 //void 	wizchip_spi_readburst(uint8_t* pBuf, uint16_t len) 	{}; 
-__weak void 	wizchip_spi_readburst(uint8_t* pBuf, uint16_t len) 	{}
+void 	wizchip_spi_readburst(uint8_t* pBuf, uint16_t len) 	{}
 
 /**
  * @brief Default function to burst write in SPI interface.
@@ -140,7 +138,7 @@ __weak void 	wizchip_spi_readburst(uint8_t* pBuf, uint16_t len) 	{}
  * null function is called.
  */
 //void 	wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {};
-__weak void 	wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {}
+void 	wizchip_spi_writeburst(uint8_t* pBuf, uint16_t len) {}
 
 /**
  * @\ref _WIZCHIP instance
@@ -183,7 +181,8 @@ _WIZCHIP  WIZCHIP =
             //wizchip_bus_writebyte
             wizchip_bus_readdata,
             wizchip_bus_writedata
-        }
+        },
+
     }
 };
 
@@ -906,7 +905,3 @@ void wizchip_gettimeout(wiz_NetTimeout* nettime)
    nettime->retry_cnt = getRCR();
    nettime->time_100us = getRTR();
 }
-
-#ifdef __cplusplus
-}
-#endif
